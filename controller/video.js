@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/user');
 const Video = require('../models/video');
+const getVideoDuration = require('../util/getVideoDuration');
 
 exports.getVideos = (req, res, next) => {
 	const page = req.query.page || 1;
@@ -13,14 +14,14 @@ exports.getVideos = (req, res, next) => {
 			return Video.find()
 				.skip((page - 1) * perPage)
 				.limit(perPage)
-				.select('-url -comments -description')
+				.select('-url -comments -description -updatedAt -__v')
 				.populate('user', 'name imageUrl');
 			// .populate('comments.userId', 'name');
 		})
 		.then((videos) => {
 			res.status(200).json({
 				message: 'Fetched Videos successful',
-				data: videos,
+				videos: videos,
 				total: totalVideos,
 			});
 		})
@@ -35,6 +36,7 @@ exports.getVideo = (req, res, next) => {
 	Video.findById(videoId)
 		.populate('user', 'name imageUrl')
 		.populate('comments.userId', 'name')
+		.select('-__v -updatedAt -comments._id')
 		.then((video) => {
 			if (!video) {
 				const error = new Error('Invalid Video Id');
@@ -67,7 +69,6 @@ exports.postVideo = (req, res, next) => {
 	const description = req.body.description || '';
 	const videoPath = req.files.video[0].path;
 	const thumbnailPath = req.files.thumbnail[0].path;
-
 	const video = new Video({
 		title: title,
 		description: description,
@@ -75,8 +76,12 @@ exports.postVideo = (req, res, next) => {
 		url: videoPath,
 		thumbnail: thumbnailPath,
 	});
-	video
-		.save()
+	getVideoDuration(req, videoPath)
+		.then((duration) => {
+			console.log(duration);
+			video.duration = duration;
+			return video.save();
+		})
 		.then((result) => {
 			return User.findById(req.userId);
 		})

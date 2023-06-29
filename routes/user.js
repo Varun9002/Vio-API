@@ -11,7 +11,7 @@ router.get('/myProfile', isAuth, userController.getMyProfile);
 router.get('/:userId/videos', isAuth, userController.getUserVideos);
 router.get('/:userId', isAuth, userController.getUser);
 router.post(
-	'/',
+	'/myProfile',
 	[
 		body('name')
 			.trim()

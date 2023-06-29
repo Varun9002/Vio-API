@@ -64,7 +64,10 @@ exports.login = (req, res, next) => {
 			);
 			res.status(200).json({
 				token: token,
-				userId: loadedUser._id.toString(),
+				id: loadedUser._id.toString(),
+				image: loadedUser.imageUrl,
+				name: loadedUser.name,
+				expiresIn: new Date(Date.now() + 3600000),
 			});
 		})
 		.catch((err) => {

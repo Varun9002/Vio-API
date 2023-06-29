@@ -9,17 +9,18 @@ const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/video');
 const userRoutes = require('./routes/user');
 const fs = require('fs');
+const getVideoDuration = require('./util/getVideoDuration');
 require('dotenv').config();
 const app = express();
 
-app.use(bodyParser.json());
-
 const fileStorage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		if (file.fieldname === 'video')
+		if (file.fieldname === 'video') {
 			return cb(null, path.join('public', 'videos'));
-		if (file.fieldname === 'thumbnail')
+		}
+		if (file.fieldname === 'thumbnail') {
 			return cb(null, path.join('public', 'thumbnail'));
+		}
 		cb(null, path.join('public', 'userImg'));
 	},
 	filename: (req, file, cb) => {
@@ -39,7 +40,9 @@ const fileFilter = (req, file, cb) => {
 		cb(null, false);
 	}
 };
-
+// Setup Body parser for json data
+app.use(bodyParser.json());
+//setup multer for file upload
 app.use(
 	multer({ storage: fileStorage, fileFilter: fileFilter }).fields([
 		{ name: 'video', maxCount: 1 },
@@ -47,6 +50,9 @@ app.use(
 		{ name: 'userImg', maxCount: 1 },
 	])
 );
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
+//Setup CORS Headers
 app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	res.setHeader(
@@ -60,15 +66,17 @@ app.use((req, res, next) => {
 	next();
 });
 
+//ROUTES
 app.use('/auth', authRoutes);
 app.use('/video', videoRoutes);
 app.use('/user', userRoutes);
-
+//error handling middleware
 app.use((error, req, res, next) => {
 	console.log(error);
 	const status = error.statusCode || 500;
 	const message = error.message;
 	const data = error.data;
+	//if any files were uloaded with the request delete (unlink) then as request is not fullfilled
 	for (const file in req.files) {
 		fs.unlink(req.files[file][0].path, (err) => {
 			if (err) console.log(err);
@@ -76,7 +84,7 @@ app.use((error, req, res, next) => {
 	}
 	res.status(status).json({ message: message, data: data });
 });
-
+//connect to mongodb if successfully connecred start the server
 mongoose
 	.connect(process.env.DB_CONN_URL)
 	.then(() => {
