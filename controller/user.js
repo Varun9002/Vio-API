@@ -32,7 +32,7 @@ exports.getMyVideos = (req, res, next) => {
 exports.getUser = (req, res, next) => {
 	const userId = req.params.userId;
 	User.findById(userId)
-		.select('-password -videos')
+		.select('-password -videos-email')
 		.then((user) => {
 			if (!user) {
 				const error = new Error('No user Found');
@@ -47,11 +47,12 @@ exports.getUser = (req, res, next) => {
 		});
 };
 exports.getUserVideos = (req, res, next) => {
+	const userId = req.params.userId;
 	const page = req.query.page || 1;
 	let totalVideos;
-	User.findById(req.userId)
+	User.findById(userId)
 		.select('videos')
-		.skip((PER_PAGE - 1) * page)
+		.skip(PER_PAGE * (page - 1))
 		.limit(PER_PAGE)
 		.populate({
 			path: 'videos',
@@ -60,9 +61,9 @@ exports.getUserVideos = (req, res, next) => {
 		})
 		.then((result) => {
 			res.status(200).json({
-				message: 'Fetched my videos',
-				data: result,
-				total: totalVideos,
+				message: 'Fetched one videos page',
+				videos: result.videos,
+				total: Math.ceil(totalVideos / PER_PAGE),
 			});
 		})
 		.catch((err) => {

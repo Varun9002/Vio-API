@@ -66,6 +66,9 @@ app.use((req, res, next) => {
 	next();
 });
 
+// app.use((req, res, next) => {    //forcefully delay to test UI flow
+// 	setTimeout(() => next(), 500);
+// });
 //ROUTES
 app.use('/auth', authRoutes);
 app.use('/video', videoRoutes);

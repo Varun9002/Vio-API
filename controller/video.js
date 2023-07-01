@@ -22,7 +22,7 @@ exports.getVideos = (req, res, next) => {
 			res.status(200).json({
 				message: 'Fetched Videos successful',
 				videos: videos,
-				total: totalVideos,
+				total: Math.ceil(totalVideos / perPage),
 			});
 		})
 		.catch((err) => {

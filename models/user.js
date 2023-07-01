@@ -15,6 +15,7 @@ const userSchema = new Schema({
 	},
 	imageUrl: {
 		type: String,
+		default: 'public\\userImg\\defaultUser.png',
 	},
 	videos: [{ type: Schema.Types.ObjectId, ref: 'Video' }],
 	// follower: [{ type: Schema.Types.ObjectId, ref: 'User' }],
