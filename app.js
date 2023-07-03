@@ -4,13 +4,13 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const uuid = require('uuid');
 const path = require('path');
+const helmet = require('helmet');
 
 const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/video');
 const userRoutes = require('./routes/user');
 const fs = require('fs');
-const getVideoDuration = require('./util/getVideoDuration');
-require('dotenv').config();
+// require('dotenv').config();
 const app = express();
 
 const fileStorage = multer.diskStorage({
@@ -40,6 +40,7 @@ const fileFilter = (req, file, cb) => {
 		cb(null, false);
 	}
 };
+app.use(helmet());
 // Setup Body parser for json data
 app.use(bodyParser.json());
 //setup multer for file upload
