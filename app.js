@@ -10,7 +10,7 @@ const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/video');
 const userRoutes = require('./routes/user');
 const fs = require('fs');
-// require('dotenv').config();
+require('dotenv').config();
 const app = express();
 
 const fileStorage = multer.diskStorage({
@@ -40,7 +40,7 @@ const fileFilter = (req, file, cb) => {
 		cb(null, false);
 	}
 };
-app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 // Setup Body parser for json data
 app.use(bodyParser.json());
 //setup multer for file upload

@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/user');
+const fs = require('fs');
 // const Video = require('../models/video');
 const bcrypt = require('bcryptjs');
 const PER_PAGE = 21;
@@ -90,7 +91,10 @@ exports.postUser = (req, res, next) => {
 		error.data = errors.array();
 		throw error;
 	}
-	const newUserImg = req.files.userImg[0].path;
+	let newUserImg;
+	let oldUserImg;
+	if (req.files.userImg && req.files.userImg[0])
+		newUserImg = req.files.userImg[0].path;
 	const { name, currentPassword, password } = req.body;
 	let currUser;
 	User.findById(req.userId)
@@ -99,6 +103,7 @@ exports.postUser = (req, res, next) => {
 			user.name = name;
 			//Check if image present and change the URL for it.
 			if (newUserImg) {
+				oldUserImg = user.imageUrl;
 				user.imageUrl = newUserImg;
 			}
 			// if password is changed
@@ -119,14 +124,24 @@ exports.postUser = (req, res, next) => {
 			return Promise.resolve(false);
 		})
 		.then((hash) => {
-			console.log(hash);
 			if (hash !== false) {
 				currUser.password = hash;
 			}
 			return currUser.save();
 		})
 		.then((result) => {
-			res.status(200).json({ message: 'Profile Updated', data: result });
+			if (oldUserImg)
+				fs.unlink(oldUserImg, (err) => {
+					if (err) console.log(err);
+				});
+			res.status(200).json({
+				message: 'Profile Updated',
+				data: {
+					...result.toObject(),
+					password: undefined,
+					videos: undefined,
+				},
+			});
 		})
 		.catch((err) => {
 			if (!err.statusCode) err.statusCode = 500;
