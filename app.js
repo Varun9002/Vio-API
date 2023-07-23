@@ -67,7 +67,8 @@ app.use((req, res, next) => {
 	next();
 });
 
-// app.use((req, res, next) => {    //forcefully delay to test UI flow
+// app.use((req, res, next) => {
+// 	//forcefully delay to test UI flow
 // 	setTimeout(() => next(), 500);
 // });
 //ROUTES

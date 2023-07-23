@@ -40,6 +40,9 @@ const videoSchema = new Schema(
 					type: String,
 					required: true,
 				},
+				cmntDate: {
+					type: Date,
+				},
 			},
 		],
 	},

@@ -33,7 +33,7 @@ exports.getVideos = (req, res, next) => {
 
 exports.getVideo = (req, res, next) => {
 	const videoId = req.params.videoId;
-	Video.findById(videoId)
+	Video.findByIdAndUpdate(videoId, { $inc: { views: 1 } })
 		.populate('user', 'name imageUrl')
 		.populate('comments.userId', 'name')
 		.select('-__v -updatedAt -comments._id')
@@ -115,11 +115,44 @@ exports.postComment = (req, res, next) => {
 				throw error;
 			}
 			console.log(req.userId);
-			video.comments.push({ userId: req.userId, comment: commentStr });
+			video.comments.push({
+				userId: req.userId,
+				comment: commentStr,
+				cmntDate: new Date(),
+			});
 			return video.save();
 		})
 		.then((result) => {
 			res.status(200).json({ message: 'Comment added' });
+		})
+		.catch((err) => {
+			if (!err.statusCode) err.statusCode = 500;
+			next(err);
+		});
+};
+exports.getSearchVideos = (req, res, next) => {
+	const page = req.query.page || 1;
+	const search = req.query.search;
+	const perPage = 21;
+	let totalVideos;
+
+	Video.find({ title: { $regex: search, $options: 'i' } })
+		.countDocuments()
+		.then((count) => {
+			totalVideos = count;
+			return Video.find({ title: { $regex: search, $options: 'i' } })
+				.skip((page - 1) * perPage)
+				.limit(perPage)
+				.select('-url -comments -description -updatedAt -__v')
+				.populate('user', 'name imageUrl');
+			// .populate('comments.userId', 'name');
+		})
+		.then((videos) => {
+			res.status(200).json({
+				message: 'Fetched Videos successful',
+				videos: videos,
+				total: Math.ceil(totalVideos / perPage),
+			});
 		})
 		.catch((err) => {
 			if (!err.statusCode) err.statusCode = 500;
